@@ -32,4 +32,5 @@ jobs:
             --env-var "client_secret=$SPOTIFY_CLIENT_SECRET" \
             --env-var "base_url=https://api.spotify.com/v1" \
             --env-var "access_token=" \
+            --env-var "track_id=2fuYa3Lx06QQJAm0MjztKr" \
             --reporters cli
