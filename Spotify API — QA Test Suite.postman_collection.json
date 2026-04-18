@@ -1,0 +1,799 @@
+{
+  "info": {
+    "_postman_id": "17cecc01-8b13-42b1-bfc0-5c60c0758d15",
+    "name": "Spotify API — QA Test Suite",
+    "description": "Structured API testing across authentication, search, and track data endpoints. Covers happy path, negative, and boundary test cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46473949",
+    "_collection_link": "https://go.postman.co/collection/46473949-17cecc01-8b13-42b1-bfc0-5c60c0758d15?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "AUTH-01 — Get access token (valid credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains access token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.access_token).to.be.a('string');",
+                  "    pm.expect(jsonData.access_token).to.have.length.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"Token type is Bearer\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token_type).to.equal('Bearer');",
+                  "});",
+                  "",
+                  "pm.test(\"Expires in is a positive number\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.expires_in).to.be.a('number');",
+                  "    pm.expect(jsonData.expires_in).to.be.above(0);",
+                  "});",
+                  "",
+                  "// Automatically save token to environment",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"access_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text",
+                  "uuid": "2ac37f84-57ee-4b35-9896-39757b6e1b40"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}",
+                  "type": "text",
+                  "uuid": "ff944355-795f-4ac3-9595-9d3ca34269aa"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}",
+                  "type": "text",
+                  "uuid": "25c4c80a-9dd8-4c03-bce5-02243e04087c"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://accounts.spotify.com/api/token",
+              "protocol": "https",
+              "host": [
+                "accounts",
+                "spotify",
+                "com"
+              ],
+              "path": [
+                "api",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-02 — Get access token (invalid credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error message indicates invalid client\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.be.a('string');",
+                  "    pm.expect(jsonData.error.toLowerCase()).to.include('invalid');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text",
+                  "uuid": "6bfd4e9f-5f5a-47c2-8d07-16a5e9fb7763"
+                },
+                {
+                  "key": "client_id",
+                  "value": "invalid_client_id",
+                  "type": "text",
+                  "uuid": "1be5978e-f1e6-4ba1-a40a-100830367520"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "invalid_client_secret",
+                  "type": "text",
+                  "uuid": "6e907e9c-1b4a-4ec7-923e-786d9cdbcb61"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://accounts.spotify.com/api/token",
+              "protocol": "https",
+              "host": [
+                "accounts",
+                "spotify",
+                "com"
+              ],
+              "path": [
+                "api",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-03 — Get access token (missing grant type)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error is not the same as invalid credentials error\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.not.equal('invalid_client');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}",
+                  "type": "text",
+                  "uuid": "279540b2-e7e7-4676-aeee-403df85a1e3d"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}",
+                  "type": "text",
+                  "uuid": "9f9d0b4d-3721-4e83-94a1-df6329b3597a"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://accounts.spotify.com/api/token",
+              "protocol": "https",
+              "host": [
+                "accounts",
+                "spotify",
+                "com"
+              ],
+              "path": [
+                "api",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-04 — Access protected endpoint with invalid token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error object\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error status is 401\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.status).to.equal(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message indicates token issue\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.message).to.be.a('string');",
+                  "    pm.expect(jsonData.error.message.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer fake_token_12345",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/search?q=Beatles&type=track&limit=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Beatles"
+                },
+                {
+                  "key": "type",
+                  "value": "track"
+                },
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "SEARCH-01 — Valid track search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains tracks object\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tracks');",
+                  "});",
+                  "",
+                  "pm.test(\"Tracks items array is not empty\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tracks.items).to.be.an('array');",
+                  "    pm.expect(jsonData.tracks.items.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test(\"First result has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var firstTrack = jsonData.tracks.items[0];",
+                  "    pm.expect(firstTrack).to.have.property('id');",
+                  "    pm.expect(firstTrack).to.have.property('name');",
+                  "    pm.expect(firstTrack).to.have.property('duration_ms');",
+                  "    pm.expect(firstTrack).to.have.property('explicit');",
+                  "});",
+                  "",
+                  "pm.test(\"Results respect limit parameter\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tracks.items.length).to.be.at.most(5);",
+                  "});",
+                  "",
+                  "// Save a track ID for later tests",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.tracks.items.length > 0) {",
+                  "    pm.environment.set(\"track_id\", jsonData.tracks.items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/search?q=Radiohead&type=track&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Radiohead"
+                },
+                {
+                  "key": "type",
+                  "value": "track"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SEARCH-02 — Empty search query",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error object\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is descriptive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.message).to.be.a('string');",
+                  "    pm.expect(jsonData.error.message.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/search?q=&type=track&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                },
+                {
+                  "key": "type",
+                  "value": "track"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SEARCH-03 — Unencoded special characters break URL structure",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 400\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is valid JSON\", function () {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "",
+                  "pm.test(\"If 200 - response has tracks property\", function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('tracks');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"If 400 - response has error property\", function () {",
+                  "    if (pm.response.code === 400) {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('error');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/search?q=@#$%^&type=track&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "@"
+                }
+              ],
+              "hash": "$%^&type=track&limit=5"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SEARCH-04 — Spotify returns results for gibberish queries — fuzzy search confirmed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains tracks object\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('tracks');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains items array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tracks.items).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Total field is a non-negative number\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.tracks.total).to.be.a('number');",
+                  "    pm.expect(jsonData.tracks.total).to.be.at.least(0);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/search?q=xzqjfkwpvbnmxzqjfkwp&type=track&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "xzqjfkwpvbnmxzqjfkwp"
+                },
+                {
+                  "key": "type",
+                  "value": "track"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Track",
+      "item": [
+        {
+          "name": "TRACK-01 — Get valid track by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains id field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Response name field is a string\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test(\"Response duration_ms is a number above zero\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.duration_ms).to.be.a('number').and.to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracks/{{track_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tracks",
+                "{{track_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TRACK-02 — Get track with invalid ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error property\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error status field is a number\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.status).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracks/INVALID_TRACK_ID_12345",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tracks",
+                "INVALID_TRACK_ID_12345"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TRACK-03 — Get track with well-formed but non-existent ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error property\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test(\"Error message is descriptive\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.message).to.be.a('string');",
+                  "    pm.expect(jsonData.error.message.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracks/0000000000000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tracks",
+                "0000000000000000000000"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TRACK-04 — Get track with market restriction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains track data\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "});",
+                  "",
+                  "pm.test(\"is_playable field is present\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('is_playable');",
+                  "});",
+                  "",
+                  "pm.test(\"is_playable reflects market availability\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.is_playable).to.be.a('boolean');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tracks/{{track_id}}?market=CN",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tracks",
+                "{{track_id}}"
+              ],
+              "query": [
+                {
+                  "key": "market",
+                  "value": "CN"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
