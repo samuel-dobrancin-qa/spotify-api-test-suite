@@ -1,3 +1,5 @@
+[![Spotify API Tests](https://github.com/samuel-dobrancin-qa/spotify-api-test-suite/actions/workflows/newman.yml/badge.svg)](https://github.com/samuel-dobrancin-qa/spotify-api-test-suite/actions/workflows/newman.yml)
+
 # Spotify API — QA Test Suite
 
 Structured API testing of the Spotify Web API across 
