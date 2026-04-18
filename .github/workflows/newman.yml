@@ -1,0 +1,35 @@
+name: Spotify API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run Spotify API tests
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: |
+          newman run spotify-api-test-suite.json \
+            --env-var "client_id=$SPOTIFY_CLIENT_ID" \
+            --env-var "client_secret=$SPOTIFY_CLIENT_SECRET" \
+            --env-var "base_url=https://api.spotify.com/v1" \
+            --env-var "access_token=" \
+            --reporters cli
